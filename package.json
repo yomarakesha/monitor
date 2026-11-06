@@ -1,0 +1,35 @@
+{
+  "name": "monitor",
+  "version": "0.1.0",
+  "description": "Desktop dashboard for monitoring internet and local apps",
+  "main": "./out/main/index.js",
+  "author": "yomarakesha",
+  "private": true,
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "typecheck": "tsc --noEmit",
+    "build:linux": "electron-vite build && electron-builder --linux AppImage"
+  },
+  "build": {
+    "appId": "local.monitor",
+    "productName": "Monitor",
+    "files": [
+      "out/**"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.2.1",
+    "electron": "^45.2.3",
+    "electron-builder": "^26.18.0",
+    "electron-vite": "^6.0.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.6"
+  }
+}
