@@ -53,3 +53,10 @@ export function remove(id: string): void {
   cache = load().filter((e) => e.id !== id)
   save()
 }
+
+export function createMany(inputs: AppInput[]): AppEntry[] {
+  const entries = inputs.map((input) => ({ ...input, id: randomUUID() }))
+  load().push(...entries)
+  save()
+  return entries
+}

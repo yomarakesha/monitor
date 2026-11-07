@@ -35,6 +35,58 @@ export interface Status {
   failThreshold?: number
 }
 
+export interface WindowBounds {
+  x: number
+  y: number
+  width: number
+  height: number
+  maximized: boolean
+}
+
+export interface TelegramSettings {
+  enabled: boolean
+  chatId: string
+  hasToken: boolean
+}
+
+export interface EmailSettings {
+  enabled: boolean
+  host: string
+  port: number
+  secure: boolean
+  user: string
+  from: string
+  to: string
+  hasPassword: boolean
+}
+
+// What the renderer sees: secrets are reported only as `has*` flags.
+export interface Settings {
+  closeToTray: boolean
+  autostart: boolean
+  startHidden: boolean
+  notifyDesktop: boolean
+  telegram: TelegramSettings
+  email: EmailSettings
+}
+
+// Secret fields: undefined keeps the stored value, '' clears it.
+export interface SettingsInput {
+  closeToTray: boolean
+  autostart: boolean
+  startHidden: boolean
+  notifyDesktop: boolean
+  telegram: Omit<TelegramSettings, 'hasToken'> & { token?: string }
+  email: Omit<EmailSettings, 'hasPassword'> & { password?: string }
+}
+
+export type NotifyChannel = 'desktop' | 'telegram' | 'email'
+
+export interface ImportResult {
+  added: number
+  skipped: number
+}
+
 export interface Api {
   list(): Promise<AppEntry[]>
   create(input: AppInput): Promise<AppEntry>
@@ -43,4 +95,10 @@ export interface Api {
   checkNow(id: string): Promise<void>
   statuses(): Promise<Status[]>
   onStatus(cb: (s: Status) => void): () => void
+  getSettings(): Promise<Settings>
+  setSettings(input: SettingsInput): Promise<Settings>
+  testNotify(channel: NotifyChannel): Promise<void>
+  // Resolve to null when the user cancels the file dialog.
+  exportApps(): Promise<string | null>
+  importApps(): Promise<ImportResult | null>
 }

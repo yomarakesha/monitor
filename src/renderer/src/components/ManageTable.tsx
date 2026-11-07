@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { AppEntry, Status } from '../../../shared/types'
 import AppForm from './AppForm'
 import StatusBadge from './StatusBadge'
+import { ipcError } from '../ipcError'
 
 interface Props {
   apps: AppEntry[]
@@ -11,6 +12,27 @@ interface Props {
 
 export default function ManageTable({ apps, statuses, onChange }: Props) {
   const [editing, setEditing] = useState<AppEntry | 'new' | null>(null)
+  const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null)
+
+  const exportApps = async () => {
+    try {
+      const path = await window.api.exportApps()
+      if (path) setMessage({ text: `Сохранено: ${path}` })
+    } catch (err) {
+      setMessage({ text: ipcError(err), error: true })
+    }
+  }
+
+  const importApps = async () => {
+    try {
+      const res = await window.api.importApps()
+      if (!res) return
+      setMessage({ text: `Добавлено: ${res.added}, пропущено: ${res.skipped}` })
+      onChange()
+    } catch (err) {
+      setMessage({ text: ipcError(err), error: true })
+    }
+  }
 
   const remove = async (a: AppEntry) => {
     if (!confirm(`Удалить «${a.name}»?`)) return
@@ -22,9 +44,16 @@ export default function ManageTable({ apps, statuses, onChange }: Props) {
     <section className="manage">
       <div className="manage-head">
         <h2>Приложения</h2>
-        <button className="primary" onClick={() => setEditing('new')}>
-          + Добавить
-        </button>
+        <div className="manage-buttons">
+          {message && <span className={message.error ? 'form-error' : 'form-ok'}>{message.text}</span>}
+          <button onClick={importApps}>Импорт</button>
+          <button onClick={exportApps} disabled={apps.length === 0}>
+            Экспорт
+          </button>
+          <button className="primary" onClick={() => setEditing('new')}>
+            + Добавить
+          </button>
+        </div>
       </div>
       <table>
         <thead>

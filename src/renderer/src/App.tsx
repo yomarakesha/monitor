@@ -1,20 +1,25 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { AppEntry, AppKind, Status } from '../../shared/types'
-import Board from './components/Board'
+import Board, { EMPTY_FILTER, type Filter } from './components/Board'
 import ManageTable from './components/ManageTable'
+import Settings from './components/Settings'
 
-type Tab = AppKind | 'manage'
+type Tab = AppKind | 'manage' | 'settings'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'internet', label: 'Internet Apps' },
   { id: 'local', label: 'Local Apps' },
-  { id: 'manage', label: 'Управление' }
+  { id: 'manage', label: 'Управление' },
+  { id: 'settings', label: 'Настройки' }
 ]
+
+const isBoard = (t: Tab): t is AppKind => t === 'internet' || t === 'local'
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('internet')
   const [apps, setApps] = useState<AppEntry[]>([])
   const [statuses, setStatuses] = useState<Record<string, Status>>({})
+  const [filter, setFilter] = useState<Filter>(EMPTY_FILTER)
 
   const reload = useCallback(() => window.api.list().then(setApps), [])
 
@@ -34,7 +39,7 @@ export default function App() {
     <div className="app">
       <nav className="tabs">
         {TABS.map((t) => {
-          const c = t.id !== 'manage' ? count(t.id) : null
+          const c = isBoard(t.id) ? count(t.id) : null
           return (
             <button key={t.id} className={tab === t.id ? 'tab active' : 'tab'} onClick={() => setTab(t.id)}>
               {t.label}
@@ -45,12 +50,14 @@ export default function App() {
         })}
       </nav>
       <main className="content">
-        {tab === 'manage' ? (
-          <ManageTable apps={apps} statuses={statuses} onChange={reload} />
-        ) : (
+        {tab === 'manage' && <ManageTable apps={apps} statuses={statuses} onChange={reload} />}
+        {tab === 'settings' && <Settings />}
+        {isBoard(tab) && (
           <Board
             apps={apps.filter((a) => a.kind === tab)}
             statuses={statuses}
+            filter={filter}
+            onFilter={setFilter}
             onAdd={() => setTab('manage')}
           />
         )}

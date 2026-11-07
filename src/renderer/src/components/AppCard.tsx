@@ -36,6 +36,12 @@ export default function AppCard({ app, status }: Props) {
   }, [app.url])
 
   useEffect(() => {
+    if (!app.refreshMin) return
+    const timer = setInterval(() => view.current?.reload(), app.refreshMin * 60_000)
+    return () => clearInterval(timer)
+  }, [app.refreshMin])
+
+  useEffect(() => {
     if (!expanded) return
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setExpanded(false)
     window.addEventListener('keydown', onKey)
