@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { AppEntry, AppKind, Status } from '../../shared/types'
+import type { AppEntry, AppKind, Status, Uptime } from '../../shared/types'
 import Board, { EMPTY_FILTER, type Filter } from './components/Board'
 import ManageTable from './components/ManageTable'
 import Settings from './components/Settings'
@@ -20,6 +20,7 @@ export default function App() {
   const [apps, setApps] = useState<AppEntry[]>([])
   const [statuses, setStatuses] = useState<Record<string, Status>>({})
   const [filter, setFilter] = useState<Filter>(EMPTY_FILTER)
+  const [uptimes, setUptimes] = useState<Record<string, Uptime>>({})
 
   const reload = useCallback(() => window.api.list().then(setApps), [])
 
@@ -28,6 +29,13 @@ export default function App() {
     window.api.statuses().then((all) => setStatuses(Object.fromEntries(all.map((s) => [s.id, s]))))
     return window.api.onStatus((s) => setStatuses((prev) => ({ ...prev, [s.id]: s })))
   }, [reload])
+
+  useEffect(() => {
+    const load = () => window.api.uptimes().then(setUptimes)
+    load()
+    const timer = setInterval(load, 60_000)
+    return () => clearInterval(timer)
+  }, [])
 
   const count = (kind: AppKind) => {
     const items = apps.filter((a) => a.kind === kind)
@@ -56,6 +64,7 @@ export default function App() {
           <Board
             apps={apps.filter((a) => a.kind === tab)}
             statuses={statuses}
+            uptimes={uptimes}
             filter={filter}
             onFilter={setFilter}
             onAdd={() => setTab('manage')}

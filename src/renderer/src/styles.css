@@ -194,3 +194,45 @@ button:disabled { opacity: 0.5; cursor: default; border-color: var(--border); }
 .check-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .hint { margin: 0; color: var(--muted); }
 .settings-actions { display: flex; justify-content: flex-end; align-items: center; gap: 12px; }
+
+.card-actions { align-items: center; }
+.uptime { margin-left: auto; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.modal.history { width: min(920px, 94vw); }
+.history-head, .history-range { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.history h3 { margin: 4px 0 0; font-size: 14px; }
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.tile { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.tile-label { color: var(--muted); font-size: 12px; }
+.tile-value { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.segmented { display: flex; }
+.segmented button { border-radius: 0; margin-left: -1px; padding: 4px 12px; font-size: 12px; }
+.segmented button:first-child { border-radius: 6px 0 0 6px; }
+.segmented button:last-child { border-radius: 0 6px 6px 0; }
+.segmented button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.chart { position: relative; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; }
+.chart svg { display: block; }
+.chart-empty { height: 220px; display: grid; place-items: center; color: var(--muted); }
+.chart-grid { stroke: var(--border); stroke-width: 1; }
+.chart-label { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.chart-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart-down { fill: var(--down); }
+.chart-cross { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.chart-dot { fill: var(--accent); stroke: var(--panel-2); stroke-width: 2; }
+.chart-tip {
+  position: absolute;
+  width: 178px;
+  pointer-events: none;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.chart-tip-down, .still-down { color: var(--down); }
+.legend-down { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--down); opacity: 0.6; vertical-align: -1px; }
+.incidents td { font-variant-numeric: tabular-nums; }

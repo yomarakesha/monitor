@@ -7,8 +7,9 @@ import * as settings from './settings'
 import * as notify from './notify'
 import * as tray from './tray'
 import * as autostart from './autostart'
+import * as history from './history'
 import { PARTITION } from './monitor'
-import type { AppEntry, AppInput, ImportResult, NotifyChannel, SettingsInput } from '../shared/types'
+import type { AppEntry, AppInput, HistoryRange, ImportResult, NotifyChannel, SettingsInput } from '../shared/types'
 import icon from '../../build/icon.png?asset'
 
 const EXPORT_VERSION = 1
@@ -152,6 +153,7 @@ function registerIpc(): void {
   ipcMain.handle('apps:remove', (_e, id: string) => {
     store.remove(id)
     monitor.unschedule(id)
+    history.remove(id)
     tray.update()
   })
   ipcMain.handle('apps:check', (_e, id: string) => {
@@ -163,6 +165,8 @@ function registerIpc(): void {
   ipcMain.handle('status:all', () => monitor.allStatuses())
   ipcMain.handle('settings:get', () => settings.get())
   ipcMain.handle('settings:set', (_e, input: SettingsInput) => applySettings(input))
+  ipcMain.handle('history:uptimes', () => history.uptimes())
+  ipcMain.handle('history:get', (_e, id: string, range: HistoryRange) => history.history(id, range))
   ipcMain.handle('notify:test', (_e, channel: NotifyChannel) => notify.test(channel))
 }
 
@@ -262,6 +266,8 @@ if (!app.requestSingleInstanceLock()) {
   app.on('second-instance', showWindow)
 
   app.whenReady().then(() => {
+    history.open()
+    monitor.onStatus(history.record)
     registerIpc()
     allowLocalCerts()
     // Links opened from inside monitored apps go to the system browser.

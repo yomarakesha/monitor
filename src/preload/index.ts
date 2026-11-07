@@ -13,6 +13,8 @@ const api: Api = {
   testNotify: (channel) => ipcRenderer.invoke('notify:test', channel),
   exportApps: () => ipcRenderer.invoke('apps:export'),
   importApps: () => ipcRenderer.invoke('apps:import'),
+  uptimes: () => ipcRenderer.invoke('history:uptimes'),
+  history: (id, range) => ipcRenderer.invoke('history:get', id, range),
   onStatus: (cb) => {
     const handler = (_e: unknown, s: Status) => cb(s)
     ipcRenderer.on('status:update', handler)

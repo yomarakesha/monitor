@@ -1,4 +1,4 @@
-import type { AppEntry, State, Status } from '../../../shared/types'
+import type { AppEntry, State, Status, Uptime } from '../../../shared/types'
 import AppCard from './AppCard'
 
 export interface Filter {
@@ -12,6 +12,7 @@ export const EMPTY_FILTER: Filter = { query: '', state: 'all', onlyDown: false }
 interface Props {
   apps: AppEntry[]
   statuses: Record<string, Status>
+  uptimes: Record<string, Uptime>
   filter: Filter
   onFilter: (f: Filter) => void
   onAdd: () => void
@@ -25,7 +26,7 @@ function matches(app: AppEntry, status: Status | undefined, f: Filter): boolean 
   return f.state === 'all' || state === f.state
 }
 
-export default function Board({ apps, statuses, filter, onFilter, onAdd }: Props) {
+export default function Board({ apps, statuses, uptimes, filter, onFilter, onAdd }: Props) {
   if (apps.length === 0) {
     return (
       <div className="empty">
@@ -67,7 +68,7 @@ export default function Board({ apps, statuses, filter, onFilter, onAdd }: Props
       ) : (
         <div className="board">
           {visible.map((a) => (
-            <AppCard key={a.id} app={a} status={statuses[a.id]} />
+            <AppCard key={a.id} app={a} status={statuses[a.id]} uptime={uptimes[a.id]} />
           ))}
         </div>
       )}

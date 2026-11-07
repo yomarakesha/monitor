@@ -1,17 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
 import type { WebviewTag } from 'electron'
-import type { AppEntry, Status } from '../../../shared/types'
+import type { AppEntry, Status, Uptime } from '../../../shared/types'
+import { formatUptime } from '../format'
+import HistoryModal from './HistoryModal'
 import StatusBadge from './StatusBadge'
 
 interface Props {
   app: AppEntry
   status?: Status
+  uptime?: Uptime
 }
 
-export default function AppCard({ app, status }: Props) {
+export default function AppCard({ app, status, uptime }: Props) {
   const host = useRef<HTMLDivElement>(null)
   const view = useRef<WebviewTag | null>(null)
   const [expanded, setExpanded] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
 
   // The webview is created imperatively so `partition` is set before the first navigation.
@@ -63,11 +67,16 @@ export default function AppCard({ app, status }: Props) {
         <button onClick={() => window.api.checkNow(app.id)}>Проверить</button>
         <button onClick={() => view.current?.reload()}>Обновить вид</button>
         <button onClick={() => setExpanded((v) => !v)}>{expanded ? 'Свернуть' : 'Развернуть'}</button>
+        <button onClick={() => setShowHistory(true)}>История</button>
+        <span className="uptime" title="Аптайм за 24 часа / 7 дней / 30 дней">
+          {formatUptime(uptime?.d1)} · {formatUptime(uptime?.d7)} · {formatUptime(uptime?.d30)}
+        </span>
       </div>
       <div className="card-view" ref={host}>
         {loadError && <div className="view-error">Не удалось загрузить: {loadError}</div>}
       </div>
       {app.description && <p className="card-desc">{app.description}</p>}
+      {showHistory && <HistoryModal app={app} onClose={() => setShowHistory(false)} />}
     </article>
   )
 }

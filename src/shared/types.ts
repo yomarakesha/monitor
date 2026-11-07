@@ -87,6 +87,39 @@ export interface ImportResult {
   skipped: number
 }
 
+// Share of checks not reported DOWN, 0..1; null when there are no checks in the period.
+export interface Uptime {
+  d1: number | null
+  d7: number | null
+  d30: number | null
+}
+
+export type HistoryRange = '24h' | '7d' | '30d'
+
+export interface HistoryPoint {
+  t: number
+  // Average over checks that were not DOWN; null when every check in the bucket was DOWN.
+  latencyMs: number | null
+  checks: number
+  down: number
+}
+
+export interface Incident {
+  startedAt: number
+  // null while the app is still DOWN.
+  endedAt: number | null
+  error?: string
+}
+
+export interface History {
+  uptime: Uptime
+  points: HistoryPoint[]
+  incidents: Incident[]
+  bucketMs: number
+  from: number
+  to: number
+}
+
 export interface Api {
   list(): Promise<AppEntry[]>
   create(input: AppInput): Promise<AppEntry>
@@ -101,4 +134,6 @@ export interface Api {
   // Resolve to null when the user cancels the file dialog.
   exportApps(): Promise<string | null>
   importApps(): Promise<ImportResult | null>
+  uptimes(): Promise<Record<string, Uptime>>
+  history(id: string, range: HistoryRange): Promise<History>
 }
