@@ -7,7 +7,19 @@ interface Props {
   onSaved: () => void
 }
 
-const EMPTY: AppInput = { name: '', description: '', url: '', kind: 'internet', intervalSec: 30 }
+const EMPTY: AppInput = { name: '', description: '', url: '', kind: 'internet', intervalSec: 30, failThreshold: 2 }
+
+function isHttpUrl(value: string): boolean {
+  try {
+    const u = new URL(value)
+    return u.protocol === 'http:' || u.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+// Empty optional number inputs mean "not set".
+const optNum = (v: string) => (v === '' ? undefined : Number(v))
 
 export default function AppForm({ initial, onCancel, onSaved }: Props) {
   const [form, setForm] = useState<AppInput>(initial ?? EMPTY)
@@ -16,10 +28,7 @@ export default function AppForm({ initial, onCancel, onSaved }: Props) {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
-    try {
-      const u = new URL(form.url)
-      if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error()
-    } catch {
+    if (!isHttpUrl(form.url) || (form.healthUrl && !isHttpUrl(form.healthUrl))) {
       setError('Адрес должен начинаться с http:// или https://')
       return
     }
@@ -68,6 +77,60 @@ export default function AppForm({ initial, onCancel, onSaved }: Props) {
               min={5}
               value={form.intervalSec}
               onChange={(e) => set('intervalSec', Number(e.target.value))}
+            />
+          </label>
+        </div>
+        <h3 className="form-section">Проверка</h3>
+        <label>
+          Адрес проверки (health), если отличается
+          <input
+            placeholder="https://example.com/health"
+            value={form.healthUrl ?? ''}
+            onChange={(e) => set('healthUrl', e.target.value.trim() || undefined)}
+          />
+        </label>
+        <div className="row">
+          <label>
+            Ожидаемый код
+            <input
+              type="number"
+              min={100}
+              max={599}
+              placeholder="2xx/3xx"
+              value={form.expectedStatus ?? ''}
+              onChange={(e) => set('expectedStatus', optNum(e.target.value))}
+            />
+          </label>
+          <label>
+            Медленно, если дольше, мс
+            <input
+              type="number"
+              min={0}
+              placeholder="не задано"
+              value={form.slowMs ?? ''}
+              onChange={(e) => set('slowMs', optNum(e.target.value))}
+            />
+          </label>
+        </div>
+        <div className="row">
+          <label>
+            Сбоев подряд до DOWN
+            <input
+              type="number"
+              min={1}
+              placeholder="1"
+              value={form.failThreshold ?? ''}
+              onChange={(e) => set('failThreshold', optNum(e.target.value))}
+            />
+          </label>
+          <label>
+            Обновлять вид каждые, мин
+            <input
+              type="number"
+              min={0}
+              placeholder="не обновлять"
+              value={form.refreshMin ?? ''}
+              onChange={(e) => set('refreshMin', optNum(e.target.value))}
             />
           </label>
         </div>

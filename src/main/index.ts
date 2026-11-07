@@ -2,14 +2,24 @@ import { app, BrowserWindow, ipcMain, session, shell } from 'electron'
 import { join } from 'path'
 import * as store from './store'
 import * as monitor from './monitor'
+import { PARTITION } from './monitor'
 import type { AppEntry, AppInput } from '../shared/types'
+import icon from '../../build/icon.png?asset'
 
-const PARTITION = 'persist:monitor'
+function validateUrl(url: string): void {
+  const u = new URL(url)
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error('URL must be http(s)')
+}
 
 function validate(input: AppInput): void {
-  const u = new URL(input.url)
-  if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error('URL must be http(s)')
+  validateUrl(input.url)
+  if (input.healthUrl) validateUrl(input.healthUrl)
   if (!input.name.trim()) throw new Error('Name is required')
+  const s = input.expectedStatus
+  if (s !== undefined && !(Number.isInteger(s) && s >= 100 && s <= 599)) throw new Error('Expected status must be 100–599')
+  for (const n of [input.slowMs, input.failThreshold, input.refreshMin]) {
+    if (n !== undefined && !(Number.isFinite(n) && n >= 0)) throw new Error('Numbers must be non-negative')
+  }
 }
 
 function registerIpc(): void {
@@ -51,6 +61,7 @@ function createWindow(): void {
     height: 900,
     backgroundColor: '#0f1115',
     title: 'Monitor',
+    icon,
     autoHideMenuBar: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),

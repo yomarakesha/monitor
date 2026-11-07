@@ -9,6 +9,7 @@
   --up: #2ecc71;
   --down: #ff5c5c;
   --checking: #c9a227;
+  --slow: #f0b429;
   color-scheme: dark;
 }
 
@@ -127,6 +128,7 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 }
 .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
 .badge-up { color: var(--up); }
+.badge-slow { color: var(--slow); }
 .badge-down { color: var(--down); }
 .badge-checking { color: var(--checking); }
 .badge-details { color: var(--muted); font-weight: 400; }
@@ -158,5 +160,7 @@ td.actions { white-space: nowrap; display: flex; gap: 6px; }
 .modal label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 12px; }
 .row { display: flex; gap: 12px; }
 .row label { flex: 1; }
+.modal { max-height: 92vh; overflow: auto; }
+.form-section { margin: 4px 0 0; font-size: 13px; color: var(--muted); text-transform: uppercase; }
 .form-error { color: var(--down); margin: 0; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
