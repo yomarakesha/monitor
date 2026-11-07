@@ -11,8 +11,10 @@ ICON_DIR="$HOME/.local/share/icons/hicolor/512x512/apps"
 APPS_DIR="$HOME/.local/share/applications"
 mkdir -p "$BIN_DIR" "$ICON_DIR" "$APPS_DIR"
 
-cp "$APPIMAGE" "$BIN_DIR/Monitor.AppImage"
-chmod +x "$BIN_DIR/Monitor.AppImage"
+# Copy then rename: a running Monitor keeps its old file, and cp onto it would fail with "Text file busy".
+cp "$APPIMAGE" "$BIN_DIR/Monitor.AppImage.new"
+chmod +x "$BIN_DIR/Monitor.AppImage.new"
+mv -f "$BIN_DIR/Monitor.AppImage.new" "$BIN_DIR/Monitor.AppImage"
 python3 -c "from PIL import Image; Image.open('build/icon.png').resize((512, 512)).save('$ICON_DIR/monitor.png')" 2>/dev/null \
   || cp build/icon.png "$ICON_DIR/monitor.png"
 
