@@ -5,8 +5,9 @@ Desktop dashboard (Electron + React) for watching internet and local web apps.
 - **Internet Apps / Local Apps** tabs: board of cards with name, live status (UP/SLOW/DOWN, HTTP code, latency) and an embedded webview of the app. Search and status filter, "only down" toggle.
 - **Управление** tab: add, edit and delete apps; import and export the list as JSON (duplicates by kind + URL are skipped).
 - **Настройки** tab: close to tray, autostart, start hidden, notification channels.
-- Checks are HTTP GETs every N seconds through the webview session. Per app:
-  - optional health URL (the webview keeps showing the main URL) and exact expected HTTP code (default: any 2xx/3xx);
+- Check types: HTTP (GET through the webview session), TCP port (`host:port`, e.g. a database or Redis) and ping (system `ping` command). TCP and ping apps need no page URL; without one the card shows only the status.
+- Per app:
+  - HTTP only: optional health URL (the webview keeps showing the main URL) and exact expected HTTP code (default: any 2xx/3xx);
   - latency threshold for the yellow SLOW state;
   - consecutive failures before DOWN (retries);
   - webview auto-reload every N minutes.

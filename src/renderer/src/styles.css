@@ -236,3 +236,6 @@ button:disabled { opacity: 0.5; cursor: default; border-color: var(--border); }
 .chart-tip-down, .still-down { color: var(--down); }
 .legend-down { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--down); opacity: 0.6; vertical-align: -1px; }
 .incidents td { font-variant-numeric: tabular-nums; }
+
+.card-target { display: block; color: var(--muted); font-size: 12px; font-family: ui-monospace, monospace; word-break: break-all; }
+.card:not(:has(.card-view)) { align-self: start; }

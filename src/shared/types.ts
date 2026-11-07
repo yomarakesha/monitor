@@ -1,12 +1,19 @@
 export type AppKind = 'internet' | 'local'
 
+export type CheckType = 'http' | 'tcp' | 'ping'
+
 export interface AppEntry {
   id: string
   name: string
   description: string
+  // Page shown in the webview; required for HTTP checks, optional for TCP and ping.
   url: string
   kind: AppKind
   intervalSec: number
+  // Unset means 'http'.
+  checkType?: CheckType
+  // "host:port" for TCP, "host" for ping; unused for HTTP.
+  target?: string
   // Address used for checks instead of `url`; the webview always shows `url`.
   healthUrl?: string
   // Exact HTTP code that means UP; when unset, any 2xx/3xx is UP.

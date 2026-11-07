@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import type { AppEntry, AppInput } from '../../../shared/types'
+import type { AppEntry, AppInput, CheckType } from '../../../shared/types'
+import { isValidHost, parseTcpTarget } from '../../../shared/target'
 
 interface Props {
   initial?: AppEntry
@@ -24,17 +25,36 @@ const optNum = (v: string) => (v === '' ? undefined : Number(v))
 export default function AppForm({ initial, onCancel, onSaved }: Props) {
   const [form, setForm] = useState<AppInput>(initial ?? EMPTY)
   const [error, setError] = useState<string | null>(null)
+  const type = form.checkType ?? 'http'
   const set = <K extends keyof AppInput>(k: K, v: AppInput[K]) => setForm((f) => ({ ...f, [k]: v }))
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!isHttpUrl(form.url) || (form.healthUrl && !isHttpUrl(form.healthUrl))) {
+    const type = form.checkType ?? 'http'
+    if ((type === 'http' || form.url) && !isHttpUrl(form.url)) {
       setError('Адрес должен начинаться с http:// или https://')
       return
     }
+    if (type === 'http' && form.healthUrl && !isHttpUrl(form.healthUrl)) {
+      setError('Адрес проверки должен начинаться с http:// или https://')
+      return
+    }
+    if (type === 'tcp' && !parseTcpTarget(form.target ?? '')) {
+      setError('Для TCP укажите хост и порт, например 10.0.0.5:6379')
+      return
+    }
+    if (type === 'ping' && !isValidHost(form.target ?? '')) {
+      setError('Для ping укажите имя хоста или IP')
+      return
+    }
+    // Fields of other check types are dropped so they do not linger in apps.json.
+    const clean: AppInput =
+      type === 'http'
+        ? { ...form, checkType: undefined, target: undefined }
+        : { ...form, healthUrl: undefined, expectedStatus: undefined }
     try {
-      if (initial) await window.api.update({ ...form, id: initial.id })
-      else await window.api.create(form)
+      if (initial) await window.api.update({ ...clean, id: initial.id })
+      else await window.api.create(clean)
       onSaved()
     } catch (err) {
       setError((err as Error).message)
@@ -50,9 +70,31 @@ export default function AppForm({ initial, onCancel, onSaved }: Props) {
           <input required autoFocus value={form.name} onChange={(e) => set('name', e.target.value)} />
         </label>
         <label>
-          Адрес
+          Вид проверки
+          <select
+            value={form.checkType ?? 'http'}
+            onChange={(e) => set('checkType', e.target.value === 'http' ? undefined : (e.target.value as CheckType))}
+          >
+            <option value="http">HTTP — сайт или API</option>
+            <option value="tcp">TCP-порт — база, Redis, SSH</option>
+            <option value="ping">Ping — хост или роутер</option>
+          </select>
+        </label>
+        {type !== 'http' && (
+          <label>
+            {type === 'tcp' ? 'Хост и порт' : 'Хост'}
+            <input
+              required
+              placeholder={type === 'tcp' ? '10.0.0.5:6379' : '10.0.0.1 или router.lan'}
+              value={form.target ?? ''}
+              onChange={(e) => set('target', e.target.value.trim() || undefined)}
+            />
+          </label>
+        )}
+        <label>
+          {type === 'http' ? 'Адрес' : 'Адрес страницы для веб-вью (необязательно)'}
           <input
-            required
+            required={type === 'http'}
             placeholder="https://example.com или http://localhost:3000"
             value={form.url}
             onChange={(e) => set('url', e.target.value.trim())}
@@ -64,7 +106,7 @@ export default function AppForm({ initial, onCancel, onSaved }: Props) {
         </label>
         <div className="row">
           <label>
-            Тип
+            Вкладка
             <select value={form.kind} onChange={(e) => set('kind', e.target.value as AppInput['kind'])}>
               <option value="internet">Internet App</option>
               <option value="local">Local App</option>
@@ -82,26 +124,30 @@ export default function AppForm({ initial, onCancel, onSaved }: Props) {
           </label>
         </div>
         <h3 className="form-section">Проверка</h3>
-        <label>
-          Адрес проверки (health), если отличается
-          <input
-            placeholder="https://example.com/health"
-            value={form.healthUrl ?? ''}
-            onChange={(e) => set('healthUrl', e.target.value.trim() || undefined)}
-          />
-        </label>
-        <div className="row">
+        {type === 'http' && (
           <label>
-            Ожидаемый код
+            Адрес проверки (health), если отличается
             <input
-              type="number"
-              min={100}
-              max={599}
-              placeholder="2xx/3xx"
-              value={form.expectedStatus ?? ''}
-              onChange={(e) => set('expectedStatus', optNum(e.target.value))}
+              placeholder="https://example.com/health"
+              value={form.healthUrl ?? ''}
+              onChange={(e) => set('healthUrl', e.target.value.trim() || undefined)}
             />
           </label>
+        )}
+        <div className="row">
+          {type === 'http' && (
+            <label>
+              Ожидаемый код
+              <input
+                type="number"
+                min={100}
+                max={599}
+                placeholder="2xx/3xx"
+                value={form.expectedStatus ?? ''}
+                onChange={(e) => set('expectedStatus', optNum(e.target.value))}
+              />
+            </label>
+          )}
           <label>
             Медленно, если дольше, мс
             <input

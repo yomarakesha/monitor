@@ -1,5 +1,6 @@
 import { session, type WebContents } from 'electron'
 import type { AppEntry, State, Status } from '../shared/types'
+import * as probes from './probes'
 
 export const PARTITION = 'persist:monitor'
 const TIMEOUT_MS = 10_000
@@ -76,15 +77,23 @@ function fail(entry: AppEntry, s: Omit<Status, 'state'>): void {
   }
 }
 
+// Resolves with the HTTP code (HTTP checks only) and latency; rejects when the target is unreachable.
+async function probe(entry: AppEntry): Promise<{ code?: number; latencyMs: number }> {
+  const type = entry.checkType ?? 'http'
+  if (type === 'tcp') return { latencyMs: await probes.tcp(entry.target ?? '', TIMEOUT_MS) }
+  if (type === 'ping') return { latencyMs: await probes.ping(entry.target ?? '', TIMEOUT_MS) }
+  const started = Date.now()
+  const code = await request(entry.healthUrl || entry.url)
+  return { code, latencyMs: Date.now() - started }
+}
+
 export async function check(entry: AppEntry): Promise<void> {
   const prev = statuses.get(entry.id)
   publish({ ...prev, id: entry.id, state: 'checking', checkedAt: prev?.checkedAt ?? Date.now() })
-  const started = Date.now()
   try {
-    const code = await request(entry.healthUrl || entry.url)
-    const latencyMs = Date.now() - started
+    const { code, latencyMs } = await probe(entry)
     const base = { id: entry.id, code, latencyMs, checkedAt: Date.now() }
-    if (!isUp(entry, code)) {
+    if (code !== undefined && !isUp(entry, code)) {
       fail(entry, { ...base, error: entry.expectedStatus ? `ожидался ${entry.expectedStatus}` : undefined })
       return
     }

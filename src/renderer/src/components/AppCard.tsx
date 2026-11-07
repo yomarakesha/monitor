@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { WebviewTag } from 'electron'
 import type { AppEntry, Status, Uptime } from '../../../shared/types'
 import { formatUptime } from '../format'
+import { checkLabel } from '../../../shared/target'
 import HistoryModal from './HistoryModal'
 import StatusBadge from './StatusBadge'
 
@@ -20,6 +21,7 @@ export default function AppCard({ app, status, uptime }: Props) {
 
   // The webview is created imperatively so `partition` is set before the first navigation.
   useEffect(() => {
+    if (!app.url) return
     const wv = document.createElement('webview') as WebviewTag
     wv.setAttribute('partition', 'persist:monitor')
     wv.setAttribute('src', app.url)
@@ -57,24 +59,33 @@ export default function AppCard({ app, status, uptime }: Props) {
       <header className="card-head">
         <div className="card-title">
           <h3>{app.name}</h3>
-          <a className="card-url" href={app.url} target="_blank" rel="noreferrer">
-            {app.url}
-          </a>
+          {(app.checkType ?? 'http') !== 'http' && <span className="card-target">{checkLabel(app)}</span>}
+          {app.url && (
+            <a className="card-url" href={app.url} target="_blank" rel="noreferrer">
+              {app.url}
+            </a>
+          )}
         </div>
         <StatusBadge status={status} />
       </header>
       <div className="card-actions">
         <button onClick={() => window.api.checkNow(app.id)}>Проверить</button>
-        <button onClick={() => view.current?.reload()}>Обновить вид</button>
-        <button onClick={() => setExpanded((v) => !v)}>{expanded ? 'Свернуть' : 'Развернуть'}</button>
+        {app.url && (
+          <>
+            <button onClick={() => view.current?.reload()}>Обновить вид</button>
+            <button onClick={() => setExpanded((v) => !v)}>{expanded ? 'Свернуть' : 'Развернуть'}</button>
+          </>
+        )}
         <button onClick={() => setShowHistory(true)}>История</button>
         <span className="uptime" title="Аптайм за 24 часа / 7 дней / 30 дней">
           {formatUptime(uptime?.d1)} · {formatUptime(uptime?.d7)} · {formatUptime(uptime?.d30)}
         </span>
       </div>
-      <div className="card-view" ref={host}>
-        {loadError && <div className="view-error">Не удалось загрузить: {loadError}</div>}
-      </div>
+      {app.url && (
+        <div className="card-view" ref={host}>
+          {loadError && <div className="view-error">Не удалось загрузить: {loadError}</div>}
+        </div>
+      )}
       {app.description && <p className="card-desc">{app.description}</p>}
       {showHistory && <HistoryModal app={app} onClose={() => setShowHistory(false)} />}
     </article>

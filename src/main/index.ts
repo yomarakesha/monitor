@@ -9,6 +9,7 @@ import * as tray from './tray'
 import * as autostart from './autostart'
 import * as history from './history'
 import { PARTITION } from './monitor'
+import { checkLabel, isValidHost, parseTcpTarget } from '../shared/target'
 import type { AppEntry, AppInput, HistoryRange, ImportResult, NotifyChannel, SettingsInput } from '../shared/types'
 import icon from '../../build/icon.png?asset'
 
@@ -23,7 +24,12 @@ function validateUrl(url: string): void {
 }
 
 function validate(input: AppInput): void {
-  validateUrl(input.url)
+  const type = input.checkType ?? 'http'
+  if (type !== 'http' && type !== 'tcp' && type !== 'ping') throw new Error('Unknown check type')
+  if (type === 'tcp' && !parseTcpTarget(input.target ?? '')) throw new Error('TCP target must be host:port')
+  if (type === 'ping' && !isValidHost(input.target ?? '')) throw new Error('Ping target must be a host name or IP')
+  // The page URL is optional for TCP and ping: a database or a router has nothing to show.
+  if (type === 'http' || input.url) validateUrl(input.url)
   if (input.healthUrl) validateUrl(input.healthUrl)
   if (!input.name.trim()) throw new Error('Name is required')
   if (input.kind !== 'internet' && input.kind !== 'local') throw new Error('Unknown kind')
@@ -60,6 +66,8 @@ function normalize(raw: Record<string, unknown>): AppInput {
     url: String(raw.url ?? ''),
     kind: raw.kind === 'local' ? 'local' : 'internet',
     intervalSec: raw.intervalSec === undefined ? 30 : Number(raw.intervalSec),
+    checkType: raw.checkType === 'tcp' || raw.checkType === 'ping' ? raw.checkType : undefined,
+    target: raw.target ? String(raw.target).trim() : undefined,
     healthUrl: raw.healthUrl ? String(raw.healthUrl) : undefined,
     expectedStatus: opt(raw.expectedStatus),
     slowMs: opt(raw.slowMs),
@@ -91,7 +99,7 @@ async function importApps(): Promise<ImportResult | null> {
   const records: unknown = Array.isArray(data) ? data : data?.apps
   if (!Array.isArray(records)) throw new Error('В файле нет списка приложений')
 
-  const key = (a: { url: string; kind: string }) => `${a.kind} ${a.url}`
+  const key = (a: AppInput) => `${a.kind} ${checkLabel(a)} ${a.url}`
   const existing = new Set(store.list().map(key))
   const fresh: AppInput[] = []
   let skipped = 0
@@ -111,7 +119,7 @@ async function importApps(): Promise<ImportResult | null> {
     fresh.push(input)
   }
   // "local" disables certificate checks for the host, so a file must not do that silently for public hosts.
-  const publicLocal = fresh.filter((a) => a.kind === 'local' && !isPrivateHost(a.url))
+  const publicLocal = fresh.filter((a) => a.kind === 'local' && a.url && !isPrivateHost(a.url))
   if (publicLocal.length > 0) {
     const hosts = [...new Set(publicLocal.map((a) => new URL(a.url).host))]
     const { response } = await dialog.showMessageBox(win!, {
@@ -173,7 +181,7 @@ function registerIpc(): void {
 // Webviews accept self-signed certs only for hosts registered as local apps.
 function allowLocalCerts(): void {
   session.fromPartition(PARTITION).setCertificateVerifyProc((req, cb) => {
-    const isLocal = store.list().some((e) => e.kind === 'local' && new URL(e.url).hostname === req.hostname)
+    const isLocal = store.list().some((e) => e.kind === 'local' && e.url && new URL(e.url).hostname === req.hostname)
     cb(isLocal ? 0 : -3)
   })
 }

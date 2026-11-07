@@ -20,7 +20,7 @@ interface Props {
 
 function matches(app: AppEntry, status: Status | undefined, f: Filter): boolean {
   const q = f.query.trim().toLowerCase()
-  if (q && ![app.name, app.description, app.url].some((v) => v.toLowerCase().includes(q))) return false
+  if (q && ![app.name, app.description, app.url, app.target ?? ''].some((v) => v.toLowerCase().includes(q))) return false
   const state = status?.state ?? 'checking'
   if (f.onlyDown && state !== 'down') return false
   return f.state === 'all' || state === f.state

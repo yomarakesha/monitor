@@ -3,6 +3,7 @@ import type { AppEntry, Status } from '../../../shared/types'
 import AppForm from './AppForm'
 import StatusBadge from './StatusBadge'
 import { ipcError } from '../ipcError'
+import { checkLabel } from '../../../shared/target'
 
 interface Props {
   apps: AppEntry[]
@@ -72,7 +73,7 @@ export default function ManageTable({ apps, statuses, onChange }: Props) {
             <tr key={a.id}>
               <td>{a.name}</td>
               <td>{a.kind === 'internet' ? 'Internet' : 'Local'}</td>
-              <td className="mono">{a.url}</td>
+              <td className="mono">{(a.checkType ?? 'http') === 'http' ? a.url : checkLabel(a)}</td>
               <td className="desc">{a.description}</td>
               <td>{a.intervalSec} с</td>
               <td>

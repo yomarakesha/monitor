@@ -1,6 +1,7 @@
 import { Notification, net } from 'electron'
 import nodemailer from 'nodemailer'
 import * as settings from './settings'
+import { checkLabel } from '../shared/target'
 import type { AppEntry, NotifyChannel, Status } from '../shared/types'
 
 interface Message {
@@ -70,7 +71,7 @@ export function transition(entry: AppEntry, status: Status): void {
   const details = [status.code && `HTTP ${status.code}`, status.error].filter(Boolean).join(' · ')
   const msg: Message = {
     title: `${down ? '🔴' : '🟢'} ${entry.name}: ${down ? 'DOWN' : 'UP'}`,
-    body: [entry.healthUrl || entry.url, details].filter(Boolean).join('\n')
+    body: [checkLabel(entry), details].filter(Boolean).join('\n')
   }
   for (const channel of enabledChannels()) {
     Promise.resolve()
