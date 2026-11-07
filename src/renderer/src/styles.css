@@ -161,7 +161,6 @@ td.actions { white-space: nowrap; display: flex; gap: 6px; }
 .row { display: flex; gap: 12px; }
 .row label { flex: 1; }
 .modal { max-height: 92vh; overflow: auto; }
-.form-section { margin: 4px 0 0; font-size: 13px; color: var(--muted); text-transform: uppercase; }
 .form-error { color: var(--down); margin: 0; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
 
@@ -239,3 +238,21 @@ button:disabled { opacity: 0.5; cursor: default; border-color: var(--border); }
 
 .card-target { display: block; color: var(--muted); font-size: 12px; font-family: ui-monospace, monospace; word-break: break-all; }
 .card:not(:has(.card-view)) { align-self: start; }
+
+.advanced { border: 1px solid var(--border); border-radius: 8px; }
+.advanced summary {
+  cursor: pointer;
+  padding: 10px 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  color: var(--text);
+  list-style: none;
+}
+.advanced summary::-webkit-details-marker { display: none; }
+.advanced summary::before { content: '▸'; color: var(--muted); }
+.advanced[open] summary::before { content: '▾'; }
+.advanced-summary { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.advanced-body { display: flex; flex-direction: column; gap: 12px; padding: 0 12px 12px; }
+.row label.wide { flex: 2; }
+.row-spacer { flex: 1; }
