@@ -31,6 +31,12 @@ function hasCustomSettings(a: AppInput): boolean {
   )
 }
 
+const TYPE_HINTS: Record<CheckType, string> = {
+  http: 'Запрос к странице и проверка кода ответа. Видит, что приложение упало или отдаёт ошибку, даже если сервер включён. Карточка показывает страницу.',
+  tcp: 'Проверяет, что программа слушает порт: база, Redis, SSH. Не проверяет, правильно ли она отвечает.',
+  ping: 'Проверяет только, что устройство включено и доступно по сети: роутер, модем, сервер. Работает ли программа на нём, не видит. Некоторые серверы не отвечают на ping.'
+}
+
 // Empty optional number inputs mean "not set".
 const optNum = (v: string) => (v === '' ? undefined : Number(v))
 
@@ -120,6 +126,7 @@ export default function AppForm({ initial, onCancel, onSaved }: Props) {
             </select>
           </label>
         </div>
+        <p className="hint form-hint">{TYPE_HINTS[type]}</p>
         {type !== 'http' && (
           <label>
             {type === 'tcp' ? 'Хост и порт' : 'Хост'}

@@ -256,3 +256,4 @@ button:disabled { opacity: 0.5; cursor: default; border-color: var(--border); }
 .advanced-body { display: flex; flex-direction: column; gap: 12px; padding: 0 12px 12px; }
 .row label.wide { flex: 2; }
 .row-spacer { flex: 1; }
+.form-hint { font-size: 12px; margin-top: -4px; }
