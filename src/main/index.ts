@@ -25,11 +25,29 @@ function validate(input: AppInput): void {
   validateUrl(input.url)
   if (input.healthUrl) validateUrl(input.healthUrl)
   if (!input.name.trim()) throw new Error('Name is required')
-  const s = input.expectedStatus
-  if (s !== undefined && !(Number.isInteger(s) && s >= 100 && s <= 599)) throw new Error('Expected status must be 100–599')
-  for (const n of [input.slowMs, input.failThreshold, input.refreshMin]) {
-    if (n !== undefined && !(Number.isFinite(n) && n >= 0)) throw new Error('Numbers must be non-negative')
+  if (input.kind !== 'internet' && input.kind !== 'local') throw new Error('Unknown kind')
+  // Bounds keep timer delays far below setInterval's 2^31-1 ms limit, past which timers fire immediately.
+  const inRange = (n: number | undefined, min: number, max: number, label: string, optional = true) => {
+    if (n === undefined && optional) return
+    if (!(Number.isInteger(n) && n! >= min && n! <= max)) throw new Error(`${label} must be an integer ${min}–${max}`)
   }
+  inRange(input.intervalSec, 5, 86_400, 'Interval', false)
+  inRange(input.expectedStatus, 100, 599, 'Expected status')
+  inRange(input.slowMs, 0, 600_000, 'Slow threshold')
+  inRange(input.failThreshold, 1, 100, 'Fail threshold')
+  inRange(input.refreshMin, 0, 1440, 'Refresh period')
+}
+
+// Hosts that plausibly belong to a local network, judged by name only (no DNS lookup).
+function isPrivateHost(url: string): boolean {
+  const h = new URL(url).hostname.toLowerCase().replace(/^\[|\]$/g, '')
+  if (h === 'localhost' || /\.(localhost|local|lan|internal|home\.arpa)$/.test(h)) return true
+  const v4 = h.match(/^(\d+)\.(\d+)\.\d+\.\d+$/)
+  if (v4) {
+    const [a, b] = [Number(v4[1]), Number(v4[2])]
+    return a === 10 || a === 127 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 169 && b === 254)
+  }
+  return h === '::1' || /^f[cd][0-9a-f]{2}:/.test(h) || /^fe[89ab][0-9a-f]:/.test(h)
 }
 
 // Keeps only known fields of an imported record, so a hand-edited file cannot inject anything else.
@@ -40,7 +58,7 @@ function normalize(raw: Record<string, unknown>): AppInput {
     description: String(raw.description ?? ''),
     url: String(raw.url ?? ''),
     kind: raw.kind === 'local' ? 'local' : 'internet',
-    intervalSec: Number(raw.intervalSec) || 30,
+    intervalSec: raw.intervalSec === undefined ? 30 : Number(raw.intervalSec),
     healthUrl: raw.healthUrl ? String(raw.healthUrl) : undefined,
     expectedStatus: opt(raw.expectedStatus),
     slowMs: opt(raw.slowMs),
@@ -90,6 +108,21 @@ async function importApps(): Promise<ImportResult | null> {
     }
     existing.add(key(input))
     fresh.push(input)
+  }
+  // "local" disables certificate checks for the host, so a file must not do that silently for public hosts.
+  const publicLocal = fresh.filter((a) => a.kind === 'local' && !isPrivateHost(a.url))
+  if (publicLocal.length > 0) {
+    const hosts = [...new Set(publicLocal.map((a) => new URL(a.url).host))]
+    const { response } = await dialog.showMessageBox(win!, {
+      type: 'warning',
+      message: 'Некоторые Local Apps указывают на внешние адреса',
+      detail: `Для Local Apps проверка HTTPS-сертификата отключена. Внешние хосты:\n${hosts.join('\n')}`,
+      buttons: ['Импортировать как Internet Apps', 'Оставить Local', 'Отмена'],
+      defaultId: 0,
+      cancelId: 2
+    })
+    if (response === 2) return null
+    if (response === 0) publicLocal.forEach((a) => (a.kind = 'internet'))
   }
   store.createMany(fresh).forEach(monitor.schedule)
   return { added: fresh.length, skipped }

@@ -98,7 +98,9 @@ export async function check(entry: AppEntry): Promise<void> {
 export function schedule(entry: AppEntry): void {
   unschedule(entry.id)
   check(entry)
-  const ms = Math.max(5, entry.intervalSec) * 1000
+  // Clamped again here so a bad value in apps.json cannot produce a 0 ms or overflowing timer.
+  const sec = Number.isFinite(entry.intervalSec) ? Math.min(86_400, Math.max(5, entry.intervalSec)) : 30
+  const ms = sec * 1000
   timers.set(entry.id, setInterval(() => check(entry), ms))
 }
 

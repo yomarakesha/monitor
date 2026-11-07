@@ -75,6 +75,7 @@ export default function AppForm({ initial, onCancel, onSaved }: Props) {
             <input
               type="number"
               min={5}
+              max={86400}
               value={form.intervalSec}
               onChange={(e) => set('intervalSec', Number(e.target.value))}
             />
@@ -118,6 +119,7 @@ export default function AppForm({ initial, onCancel, onSaved }: Props) {
             <input
               type="number"
               min={1}
+              max={100}
               placeholder="1"
               value={form.failThreshold ?? ''}
               onChange={(e) => set('failThreshold', optNum(e.target.value))}
@@ -128,6 +130,7 @@ export default function AppForm({ initial, onCancel, onSaved }: Props) {
             <input
               type="number"
               min={0}
+              max={1440}
               placeholder="не обновлять"
               value={form.refreshMin ?? ''}
               onChange={(e) => set('refreshMin', optNum(e.target.value))}

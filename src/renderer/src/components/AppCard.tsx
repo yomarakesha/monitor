@@ -36,7 +36,7 @@ export default function AppCard({ app, status }: Props) {
   }, [app.url])
 
   useEffect(() => {
-    if (!app.refreshMin) return
+    if (!app.refreshMin || !(app.refreshMin > 0 && app.refreshMin <= 1440)) return
     const timer = setInterval(() => view.current?.reload(), app.refreshMin * 60_000)
     return () => clearInterval(timer)
   }, [app.refreshMin])
