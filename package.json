@@ -11,14 +11,28 @@
     "build": "electron-vite build",
     "start": "electron-vite preview",
     "typecheck": "tsc --noEmit",
-    "build:linux": "electron-vite build && electron-builder --linux AppImage"
+    "build:linux": "electron-vite build && electron-builder --linux AppImage",
+    "build:win": "electron-vite build && electron-builder --win --publish never"
   },
   "build": {
     "appId": "local.monitor",
     "productName": "Monitor",
     "files": [
       "out/**"
-    ]
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-portable.${ext}"
+    }
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
