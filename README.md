@@ -11,8 +11,8 @@ Desktop dashboard (Electron + React) for watching internet and local web apps.
   - latency threshold for the yellow SLOW state;
   - consecutive failures before DOWN (retries);
   - webview auto-reload every N minutes.
-- On UP↔DOWN: system notification, Telegram bot message, email via SMTP (each channel optional, "Тест" button for each).
-- Tray icon colour shows overall status (green / yellow / red / gray). Secrets (bot token, SMTP password) are encrypted with the OS keychain (`safeStorage`).
+- On UP↔DOWN: system notification, email via Gmail (sent from your address to itself) (each channel optional, "Тест" button for each).
+- Tray icon colour shows overall status (green / yellow / red / gray). The Gmail app password is encrypted with the OS keychain (`safeStorage`).
 - Window size and position are restored on start.
 - History in SQLite (`~/.config/monitor/history.db`, built-in `node:sqlite`): uptime for 24 h / 7 d / 30 d on every card, "История" window with a response-time chart and an outage log. Checks are kept for 30 days, outages for 90.
 - Local apps may use self-signed HTTPS certificates; internet apps are verified strictly.
@@ -24,4 +24,7 @@ Desktop dashboard (Electron + React) for watching internet and local web apps.
 npm install
 npm run dev          # development
 npm run build:linux  # AppImage in dist/
+npm run build:win    # Windows installer + portable .exe in dist/ (run on Windows)
 ```
+
+GitHub Actions (`.github/workflows/build-windows.yml`) builds the Windows `.exe` on every push to `main` and on manual run; download it from the run's artifacts. Pushing a `v*` tag also attaches the `.exe` files to a GitHub release.

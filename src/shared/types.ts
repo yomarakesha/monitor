@@ -50,20 +50,10 @@ export interface WindowBounds {
   maximized: boolean
 }
 
-export interface TelegramSettings {
-  enabled: boolean
-  chatId: string
-  hasToken: boolean
-}
-
 export interface EmailSettings {
   enabled: boolean
-  host: string
-  port: number
-  secure: boolean
-  user: string
-  from: string
-  to: string
+  // Gmail address; notifications are sent from it to itself.
+  address: string
   hasPassword: boolean
 }
 
@@ -73,7 +63,6 @@ export interface Settings {
   autostart: boolean
   startHidden: boolean
   notifyDesktop: boolean
-  telegram: TelegramSettings
   email: EmailSettings
 }
 
@@ -83,11 +72,10 @@ export interface SettingsInput {
   autostart: boolean
   startHidden: boolean
   notifyDesktop: boolean
-  telegram: Omit<TelegramSettings, 'hasToken'> & { token?: string }
   email: Omit<EmailSettings, 'hasPassword'> & { password?: string }
 }
 
-export type NotifyChannel = 'desktop' | 'telegram' | 'email'
+export type NotifyChannel = 'desktop' | 'email'
 
 export interface ImportResult {
   added: number
